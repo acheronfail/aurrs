@@ -1,0 +1,20 @@
+aurrs(1)
+=====
+
+Name
+----
+aurrs - A simple and informative way to vote on the Arch User Repository.
+
+DESCRIPTION
+-----------
+TODO
+
+HOMEPAGE
+--------
+https://github.com/acheronfail/aurrs
+
+BUGS AND FEATURES
+-----------------
+Please report bugs and feature requests in the issue tracker.
+Do your best to provide a reproducible test case for bugs.
+Also please include the version of *aurrs*.

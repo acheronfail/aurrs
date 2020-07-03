@@ -1,0 +1,28 @@
+[package]
+name = "aurrs"
+version = "0.1.0"
+description = "A simple and informative way to vote on the Arch User Repository."
+homepage = "https://github.com/acheronfail/aurrs"
+repository = "https://github.com/acheronfail/aurrs"
+keywords = ["aur", "vote", "arch"]
+categories = ["command-line-utilities"]
+authors = ["acheronfail <acheronfail@gmail.com>"]
+license = "Unlicense OR MIT OR Apache-2.0"
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0.31"
+clap = "3.0.0-beta.1"
+dirs = "3.0.0"
+envfile = "0.2.1"
+lazy_static = "1.4.0"
+reqwest = { version = "0.10", features = ["cookies", "json"] }
+rpassword = "4.0.5"
+scraper = "0.12.0"
+serde = "1.0.114"
+tokio = { version = "0.2", features = ["full"] }
+urlencoding = "1.1.1"
+
+[build-dependencies]
+clap = { version = "3.0.0-beta.1" }
+clap_generate = { version = "3.0.0-beta.1" }
