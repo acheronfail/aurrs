@@ -22,6 +22,7 @@ scraper = "0.12.0"
 serde = "1.0.114"
 tokio = { version = "0.2", features = ["full"] }
 urlencoding = "1.1.1"
+futures = "0.3.5"
 
 [build-dependencies]
 clap = { version = "3.0.0-beta.1" }

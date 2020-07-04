@@ -11,22 +11,22 @@ pub struct Args {
 #[derive(Debug, Clap)]
 pub enum Command {
     /// Vote (if not voted)
-    Vote(CommandOptions),
+    Vote(VoteCommandOptions),
     /// Remove votes (if voted)
-    Unvote(CommandOptions),
+    Unvote(VoteCommandOptions),
     /// Print the current vote status
-    Status(CommandOptions),
+    Status(VoteCommandOptions),
 }
 
 #[derive(Debug, Clap)]
 #[clap(setting = ColoredHelp)]
-pub struct CommandOptions {
+pub struct VoteCommandOptions {
     /// The list of packages
     #[clap(required = true)]
     pub packages: Vec<String>,
 }
 
-impl CommandOptions {
+impl VoteCommandOptions {
     pub fn longest_package_len(&self) -> usize {
         self.packages
             .iter()

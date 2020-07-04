@@ -4,17 +4,21 @@ use reqwest::multipart::Form;
 use reqwest::Client;
 
 use crate::aur;
-use crate::cli::CommandOptions;
-use crate::status::{get_packages_statuses, PackageStatus};
+use crate::cli::VoteCommandOptions;
+use crate::status::get_packages_statuses;
 
-pub async fn do_vote(client: &Client, options: CommandOptions, should_vote: bool) -> Result<()> {
+pub async fn do_vote(
+    client: &Client,
+    options: VoteCommandOptions,
+    should_vote: bool,
+) -> Result<()> {
     let padding = options.longest_package_len();
     let packages_and_statuses = get_packages_statuses(client, &options).await?;
-    for (pkg, PackageStatus { voted, token }) in packages_and_statuses {
-        if voted == should_vote {
+    for s in packages_and_statuses {
+        if s.voted == should_vote {
             println!(
                 "{:width$}: {}",
-                pkg,
+                s.name,
                 if should_vote {
                     "Already Voted!"
                 } else {
@@ -23,11 +27,12 @@ pub async fn do_vote(client: &Client, options: CommandOptions, should_vote: bool
                 width = padding
             );
         } else {
-            match token {
-                Some(token) => match change_package_vote(client, pkg, token, should_vote).await {
+            match s.token {
+                Some(token) => match change_package_vote(client, &s.name, token, should_vote).await
+                {
                     Ok(_) => println!(
                         "{:width$}: {}",
-                        pkg,
+                        &s.name,
                         if should_vote {
                             "Voted!"
                         } else {
@@ -37,7 +42,7 @@ pub async fn do_vote(client: &Client, options: CommandOptions, should_vote: bool
                     ),
                     Err(e) => println!("{:width$}: Failed to update vote - {}", e, width = padding),
                 },
-                None => return Err(anyhow!("Failed to find token for: {}", pkg)),
+                None => return Err(anyhow!("Failed to find token for: {}", &s.name)),
             }
         }
     }

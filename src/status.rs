@@ -1,24 +1,27 @@
 use anyhow::{anyhow, Result};
+use futures::stream::futures_unordered::FuturesUnordered;
 use reqwest::Client;
 use scraper::Html;
+use tokio::stream::StreamExt;
 
 use crate::aur;
-use crate::cli::CommandOptions;
+use crate::cli::VoteCommandOptions;
 
 #[derive(Debug)]
 pub struct PackageStatus {
+    pub name: String,
     pub voted: bool,
     pub token: Option<String>,
 }
 
-pub async fn do_status(client: &Client, options: CommandOptions) -> Result<()> {
+pub async fn do_status(client: &Client, options: VoteCommandOptions) -> Result<()> {
     let padding = options.longest_package_len();
 
     let packages_and_statuses = get_packages_statuses(client, &options).await?;
-    for (pkg, s) in packages_and_statuses {
+    for s in packages_and_statuses {
         println!(
             "{:width$}: {}",
-            pkg,
+            s.name,
             if s.voted { "Voted!" } else { "Not voted." },
             width = padding
         );
@@ -27,20 +30,22 @@ pub async fn do_status(client: &Client, options: CommandOptions) -> Result<()> {
     Ok(())
 }
 
-pub async fn get_packages_statuses<'a, 'c>(
-    client: &'c Client,
-    options: &'a CommandOptions,
-) -> Result<Vec<(&'a str, PackageStatus)>> {
-    // TODO: can we run these all concurrently?
-    let packages_and_futures = options
-        .packages
-        .iter()
-        .map(|p| (p.as_ref(), get_package_status(&client, &p)))
-        .collect::<Vec<_>>();
+pub async fn get_packages_statuses(
+    client: &Client,
+    options: &VoteCommandOptions,
+) -> Result<Vec<PackageStatus>> {
+    let mut futures = FuturesUnordered::new();
+
+    for p in &options.packages {
+        futures.push(get_package_status(&client, &p));
+    }
 
     let mut results = Vec::new();
-    for (p, f) in packages_and_futures {
-        results.push((p, f.await?));
+    while let Some(result) = futures.next().await {
+        match result {
+            Ok(value) => results.push(value),
+            Err(e) => eprintln!("error querying package status: {}", e),
+        }
     }
 
     Ok(results)
@@ -66,13 +71,21 @@ async fn get_package_status(client: &Client, pkg: &str) -> Result<PackageStatus>
         .and_then(|input| input.value().attr("value").map(|s| s.to_string()));
 
     if document.select(&aur::UNVOTE_SELECTOR).next().is_some() {
-        Ok(PackageStatus { voted: true, token })
+        Ok(PackageStatus {
+            name: pkg.to_string(),
+            voted: true,
+            token,
+        })
     } else if document.select(&aur::VOTE_SELECTOR).next().is_some() {
         Ok(PackageStatus {
+            name: pkg.to_string(),
             voted: false,
             token,
         })
     } else {
-        Err(anyhow!("{}: Unknown vote state!", pkg))
+        Err(anyhow!(
+            "[{}] failed to load package page, does it exist?",
+            pkg
+        ))
     }
 }
