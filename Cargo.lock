@@ -766,6 +766,7 @@ dependencies = [
 [[package]]
 name = "keytar"
 version = "0.1.1"
+source = "git+https://github.com/stoically/keytar-rs?branch=main#7373d191098dc6316a16df5f82527e7bc994c2dc"
 dependencies = [
  "keytar-sys",
 ]
@@ -773,6 +774,7 @@ dependencies = [
 [[package]]
 name = "keytar-sys"
 version = "0.1.1"
+source = "git+https://github.com/stoically/keytar-rs?branch=main#7373d191098dc6316a16df5f82527e7bc994c2dc"
 dependencies = [
  "cc",
  "cxx",

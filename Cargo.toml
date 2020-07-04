@@ -15,8 +15,8 @@ anyhow = "1.0.31"
 clap = "3.0.0-beta.1"
 dirs = "3.0.0"
 futures = "0.3.5"
-# FIXME: installing from a locally cloned version works, but it doesn't work from crates.io
-keytar = { version = "0.1.1", path = "../keytar-rs" }
+# FIXME: installing from git works, but it doesn't work from crates.io?
+keytar = { version = "0.1.1", git = "https://github.com/stoically/keytar-rs", branch = "main" }
 lazy_static = "1.4.0"
 reqwest = { version = "0.10", features = ["cookies", "json"] }
 rpassword = "4.0.5"
