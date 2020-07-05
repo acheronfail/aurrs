@@ -1,0 +1,2 @@
+FROM rustembedded/cross:arm-unknown-linux-gnueabihf-0.1.16
+RUN apt-get update && apt-get install --assume-yes libsecret-1-dev
