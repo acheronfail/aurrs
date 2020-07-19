@@ -7,7 +7,7 @@ use crate::aur;
 use crate::cli::VoteCommandOptions;
 use crate::status::get_packages_statuses;
 
-pub async fn do_vote(client: &Client, options: VoteCommandOptions) -> Result<()> {
+pub async fn do_vote(client: &Client, options: &VoteCommandOptions) -> Result<()> {
     let padding = options.longest_package_len();
     let packages_and_statuses = get_packages_statuses(client, &options).await?;
 

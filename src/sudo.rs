@@ -6,17 +6,23 @@ use anyhow::{anyhow, Result};
 
 pub fn use_sudo() -> Result<()> {
     // Run thread in background.
-    let _sudo_loop = spawn(|| loop_sudo());
+    spawn(|| loop_sudo());
     Ok(())
 }
 
+/// Calls `sudo -v` in a loop.
 fn loop_sudo() -> Result<()> {
     loop {
         let output = Command::new("sudo").arg("-v").output()?;
         if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
             return Err(anyhow!(
                 "Failed to use sudo: {}",
-                String::from_utf8_lossy(&output.stderr)
+                if stderr.is_empty() {
+                    String::from_utf8_lossy(&output.stdout)
+                } else {
+                    stderr
+                }
             ));
         }
 

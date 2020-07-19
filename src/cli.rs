@@ -37,6 +37,21 @@ pub enum SubCommand {
     Vote(VoteCommandOptions),
 }
 
+impl SubCommand {
+    pub fn pacman_operation(&self) -> Option<&str> {
+        match self {
+            Self::PacmanD { .. } => Some("-D"),
+            Self::PacmanF { .. } => Some("-F"),
+            Self::PacmanQ { .. } => Some("-Q"),
+            Self::PacmanR { .. } => Some("-R"),
+            Self::PacmanS { .. } => Some("-S"),
+            Self::PacmanT { .. } => Some("-T"),
+            Self::PacmanU { .. } => Some("-U"),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Clap)]
 pub struct VoteCommandOptions {
     /// The list of packages
