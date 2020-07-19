@@ -52,6 +52,7 @@ dependencies = [
  "futures",
  "keytar",
  "lazy_static",
+ "libc",
  "reqwest",
  "rpassword",
  "scraper",

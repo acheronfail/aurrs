@@ -1,22 +1,43 @@
-use clap::AppSettings::ColoredHelp;
+use clap::AppSettings::{AllowLeadingHyphen, ColoredHelp, TrailingVarArg};
 use clap::Clap;
 #[derive(Debug, Clap)]
 #[clap(setting = ColoredHelp)]
 pub struct Args {
     /// The subcommand to run
     #[clap(subcommand)]
-    pub command: Command,
+    pub command: Option<SubCommand>,
 }
 
 #[derive(Debug, Clap)]
-pub enum Command {
+pub enum SubCommand {
+    /// Alias for calling `pacman -D <args>...`.
+    #[clap(name = "database", short_flag = 'D', long_flag = "database", setting = ColoredHelp, setting = TrailingVarArg, setting = AllowLeadingHyphen)]
+    PacmanD { args: Vec<String> },
+    /// Alias for calling `pacman -F <args>...`.
+    #[clap(name = "files", short_flag = 'F', long_flag = "files", setting = ColoredHelp, setting = TrailingVarArg, setting = AllowLeadingHyphen)]
+    PacmanF { args: Vec<String> },
+    /// Alias for calling `pacman -Q <args>...`.
+    #[clap(name = "query", short_flag = 'Q', long_flag = "query", setting = ColoredHelp, setting = TrailingVarArg, setting = AllowLeadingHyphen)]
+    PacmanQ { args: Vec<String> },
+    /// Alias for calling `pacman -R <args>...`.
+    #[clap(name = "remove", short_flag = 'R', long_flag = "remove", setting = ColoredHelp, setting = TrailingVarArg, setting = AllowLeadingHyphen)]
+    PacmanR { args: Vec<String> },
+    /// Alias for calling `pacman -S <args>...`.
+    #[clap(name = "sync", short_flag = 'S', long_flag = "sync", setting = ColoredHelp, setting = TrailingVarArg, setting = AllowLeadingHyphen)]
+    PacmanS { args: Vec<String> },
+    /// Alias for calling `pacman -T <args>...`.
+    #[clap(name = "deptest", short_flag = 'T', long_flag = "deptest", setting = ColoredHelp, setting = TrailingVarArg, setting = AllowLeadingHyphen)]
+    PacmanT { args: Vec<String> },
+    /// Alias for calling `pacman -U <args>...`.
+    #[clap(name = "upgrade", short_flag = 'U', long_flag = "upgrade", setting = ColoredHelp, setting = TrailingVarArg, setting = AllowLeadingHyphen)]
+    PacmanU { args: Vec<String> },
+
     /// Vote for a package on the AUR
-    #[clap(short_flag = 'A', long_flag = "vote")]
+    #[clap(short_flag = 'A', long_flag = "vote", setting = ColoredHelp)]
     Vote(VoteCommandOptions),
 }
 
 #[derive(Debug, Clap)]
-#[clap(setting = ColoredHelp)]
 pub struct VoteCommandOptions {
     /// The list of packages
     #[clap(required = true)]
