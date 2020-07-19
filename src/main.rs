@@ -7,7 +7,7 @@ mod sudo;
 mod vote;
 
 use anyhow::Result;
-use clap::Clap;
+use clap::{crate_name, Clap};
 use reqwest::Client;
 
 use cli::{Args, SubCommand};
@@ -18,7 +18,7 @@ async fn main() -> Result<()> {
 
     unsafe {
         if libc::geteuid() == 0 {
-            eprintln!("Please avoid running aurrs as root!");
+            eprintln!("Please avoid running {} as root!", crate_name!());
         }
     }
 
