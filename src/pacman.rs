@@ -1,8 +1,13 @@
+use std::ffi::OsStr;
 use std::process::Command;
 
 use anyhow::Result;
 
-pub fn do_pacman(args: Vec<String>) -> Result<()> {
+pub fn do_pacman<I, S>(args: I) -> Result<()>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
     let mut child = Command::new("sudo").arg("pacman").args(args).spawn()?;
     let status = child.wait()?;
     if !status.success() {

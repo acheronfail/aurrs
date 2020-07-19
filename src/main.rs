@@ -45,7 +45,7 @@ async fn main() -> Result<()> {
         // Default to `-Syu`
         None => {
             sudo::use_sudo()?;
-            pacman::do_pacman(vec!["-Syu".to_string()])?;
+            pacman::do_pacman(&["-Syu"])?;
         }
     }
 
