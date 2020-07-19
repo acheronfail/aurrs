@@ -4,7 +4,6 @@ use reqwest::Client;
 
 use cli::{Args, Command};
 use login::do_login;
-use status::do_status;
 use vote::do_vote;
 
 mod aur;
@@ -23,9 +22,7 @@ async fn main() -> Result<()> {
     do_login(&client).await?;
 
     match args.command {
-        Command::Vote(options) => do_vote(&client, options, true).await?,
-        Command::Unvote(options) => do_vote(&client, options, false).await?,
-        Command::Status(options) => do_status(&client, options).await?,
+        Command::Vote(options) => do_vote(&client, options).await?,
     }
 
     Ok(())

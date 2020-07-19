@@ -4,8 +4,7 @@ use std::io;
 use std::path::Path;
 use std::process::Command;
 
-use clap::crate_name;
-use clap::derive::IntoApp;
+use clap::{crate_name, IntoApp};
 use clap_generate::{generate, generators};
 
 #[allow(dead_code)]

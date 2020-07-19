@@ -7,19 +7,17 @@ use crate::aur;
 use crate::cli::VoteCommandOptions;
 use crate::status::get_packages_statuses;
 
-pub async fn do_vote(
-    client: &Client,
-    options: VoteCommandOptions,
-    should_vote: bool,
-) -> Result<()> {
+pub async fn do_vote(client: &Client, options: VoteCommandOptions) -> Result<()> {
     let padding = options.longest_package_len();
     let packages_and_statuses = get_packages_statuses(client, &options).await?;
+
+    let should_vote = !options.unvote;
     for s in packages_and_statuses {
-        if s.voted == should_vote {
+        if options.info || s.voted == should_vote {
             println!(
                 "{:width$}: {}",
                 s.name,
-                if should_vote {
+                if s.voted {
                     "Already Voted!"
                 } else {
                     "Not voted."
@@ -28,20 +26,23 @@ pub async fn do_vote(
             );
         } else {
             match s.token {
-                Some(token) => match change_package_vote(client, &s.name, token, should_vote).await
-                {
-                    Ok(_) => println!(
-                        "{:width$}: {}",
-                        &s.name,
-                        if should_vote {
-                            "Voted!"
-                        } else {
-                            "Removed Vote!"
-                        },
-                        width = padding
-                    ),
-                    Err(e) => println!("{:width$}: Failed to update vote - {}", e, width = padding),
-                },
+                Some(token) => {
+                    match change_package_vote(client, &s.name, token, should_vote).await {
+                        Ok(_) => println!(
+                            "{:width$}: {}",
+                            &s.name,
+                            if should_vote {
+                                "Voted!"
+                            } else {
+                                "Removed Vote!"
+                            },
+                            width = padding
+                        ),
+                        Err(e) => {
+                            println!("{:width$}: Failed to update vote - {}", e, width = padding)
+                        }
+                    }
+                }
                 None => return Err(anyhow!("Failed to find token for: {}", &s.name)),
             }
         }

@@ -10,12 +10,9 @@ pub struct Args {
 
 #[derive(Debug, Clap)]
 pub enum Command {
-    /// Vote (if not voted)
+    /// Vote for a package on the AUR
+    #[clap(short_flag = 'A', long_flag = "vote")]
     Vote(VoteCommandOptions),
-    /// Remove votes (if voted)
-    Unvote(VoteCommandOptions),
-    /// Print the current vote status
-    Status(VoteCommandOptions),
 }
 
 #[derive(Debug, Clap)]
@@ -24,6 +21,14 @@ pub struct VoteCommandOptions {
     /// The list of packages
     #[clap(required = true)]
     pub packages: Vec<String>,
+
+    /// View vote status
+    #[clap(short = 'i', long = "info", conflicts_with = "unvote")]
+    pub info: bool,
+
+    /// Remove your vote
+    #[clap(short = 'r', long = "remove")]
+    pub unvote: bool,
 }
 
 impl VoteCommandOptions {

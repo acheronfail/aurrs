@@ -14,22 +14,6 @@ pub struct PackageStatus {
     pub token: Option<String>,
 }
 
-pub async fn do_status(client: &Client, options: VoteCommandOptions) -> Result<()> {
-    let padding = options.longest_package_len();
-
-    let packages_and_statuses = get_packages_statuses(client, &options).await?;
-    for s in packages_and_statuses {
-        println!(
-            "{:width$}: {}",
-            s.name,
-            if s.voted { "Voted!" } else { "Not voted." },
-            width = padding
-        );
-    }
-
-    Ok(())
-}
-
 pub async fn get_packages_statuses(
     client: &Client,
     options: &VoteCommandOptions,
