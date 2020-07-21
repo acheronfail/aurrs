@@ -1,13 +1,12 @@
 use anyhow::{anyhow, Result};
-use clap::crate_name;
-use reqwest::multipart::Form;
+use futures::stream::{FuturesUnordered, StreamExt};
 use reqwest::Client;
 
-use crate::aur;
+use crate::aur::{change_package_vote, get_package_status};
 use crate::cli::VoteCommandOptions;
-use crate::status::get_packages_statuses;
+use crate::model::PackageStatus;
 
-pub async fn do_vote(client: &Client, options: &VoteCommandOptions) -> Result<()> {
+pub async fn vote(client: &Client, options: &VoteCommandOptions) -> Result<()> {
     let padding = options.longest_package_len();
     let packages_and_statuses = get_packages_statuses(client, &options).await?;
 
@@ -51,39 +50,23 @@ pub async fn do_vote(client: &Client, options: &VoteCommandOptions) -> Result<()
     Ok(())
 }
 
-pub async fn change_package_vote(
+pub async fn get_packages_statuses(
     client: &Client,
-    pkg: &str,
-    token: String,
-    vote: bool,
-) -> Result<()> {
-    let resp = client
-        .get(&format!("{}/rpc.php", aur::AUR_BASE_URL))
-        .query(&[("type", "info"), ("arg", pkg)])
-        .send()
-        .await?
-        .json::<aur::AurRpcInfo>()
-        .await?;
+    options: &VoteCommandOptions,
+) -> Result<Vec<PackageStatus>> {
+    let mut futures = FuturesUnordered::new();
 
-    let aur::AurRpcInfoResult { package_base, .. } = resp.results;
+    for p in &options.packages {
+        futures.push(get_package_status(&client, &p));
+    }
 
-    let (action, url_path) = if vote {
-        ("do_Vote", "vote")
-    } else {
-        ("do_UnVote", "unvote")
-    };
+    let mut results = Vec::new();
+    while let Some(result) = futures.next().await {
+        match result {
+            Ok(value) => results.push(value),
+            Err(e) => eprintln!("error querying package status: {}", e),
+        }
+    }
 
-    let form = Form::new().text("token", token).text(action, crate_name!());
-    client
-        .post(&format!(
-            "{}/pkgbase/{}/{}/",
-            aur::AUR_BASE_URL,
-            urlencoding::encode(&package_base),
-            urlencoding::encode(url_path)
-        ))
-        .multipart(form)
-        .send()
-        .await?;
-
-    Ok(())
+    Ok(results)
 }

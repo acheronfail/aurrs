@@ -1,10 +1,11 @@
 mod aur;
 mod cli;
-mod login;
-mod pacman;
-mod status;
+mod command;
+mod credentials;
+mod model;
 mod sudo;
-mod vote;
+
+use std::env::args_os;
 
 use anyhow::Result;
 use clap::{crate_name, Clap};
@@ -29,29 +30,25 @@ async fn main() -> Result<()> {
                 // TODO: load the cookie from disk, currently not possible with reqwest
                 // See: https://github.com/seanmonstar/reqwest/issues/14#issuecomment-481414056
                 let client = Client::builder().cookie_store(true).build()?;
-                login::do_login(&client).await?;
-                vote::do_vote(&client, options).await?
+                aur::login_client_to_aur(&client).await?;
+                command::vote(&client, options).await?
             }
             // Commands are proxied directly to pacman.
-            SubCommand::PacmanD { args }
-            | SubCommand::PacmanF { args }
-            | SubCommand::PacmanQ { args }
-            | SubCommand::PacmanR { args }
-            | SubCommand::PacmanS { args }
-            | SubCommand::PacmanT { args }
-            | SubCommand::PacmanU { args } => {
+            SubCommand::PacmanD { .. }
+            | SubCommand::PacmanF { .. }
+            | SubCommand::PacmanQ { .. }
+            | SubCommand::PacmanR { .. }
+            | SubCommand::PacmanS { .. }
+            | SubCommand::PacmanT { .. }
+            | SubCommand::PacmanU { .. } => {
                 sudo::use_sudo()?;
-                pacman::do_pacman(
-                    vec![subcommand.pacman_operation().unwrap()]
-                        .into_iter()
-                        .chain(args.into_iter().map(|s| s.as_str())),
-                )?;
+                command::pacman(args_os().into_iter().skip(1))?;
             }
         },
         // Default to `-Syu`
         None => {
             sudo::use_sudo()?;
-            pacman::do_pacman(&["-Syu"])?;
+            command::pacman(&["-Syu"])?;
         }
     }
 

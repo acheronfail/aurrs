@@ -3,7 +3,7 @@ use std::process::Command;
 
 use anyhow::Result;
 
-pub fn do_pacman<I, S>(args: I) -> Result<()>
+pub fn pacman<I, S>(args: I) -> Result<()>
 where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,

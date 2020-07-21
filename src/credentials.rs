@@ -5,11 +5,6 @@ use std::io::{self, Write};
 use anyhow::{anyhow, Result};
 use clap::crate_name;
 use dirs::home_dir;
-use reqwest::multipart::Form;
-use reqwest::Client;
-use scraper::Html;
-
-use crate::aur;
 
 const KEYTAR_SERVICE_NAME: &str = crate_name!();
 
@@ -41,7 +36,7 @@ fn get_password(user: &str) -> Result<String> {
     }
 }
 
-fn get_credentials() -> Result<(String, String)> {
+pub fn get_credentials() -> Result<(String, String)> {
     let config_path = home_dir()
         .map(|p| p.join(".config").join(crate_name!()))
         .expect("failed to find home directory");
@@ -97,32 +92,4 @@ fn get_credentials() -> Result<(String, String)> {
         }
         Err(e) => Err(anyhow!("{}", e)),
     }
-}
-
-/// Logs in to the AUR with the given client, so future requests are authenticated with a cookie.
-pub async fn do_login(client: &Client) -> Result<()> {
-    let (user, pass) = get_credentials()?;
-    let form = Form::new()
-        .text("remember_me", "on")
-        .text("user", user)
-        .text("passwd", pass);
-
-    eprintln!("Logging in...");
-    let resp = client
-        .post(&format!("{}/login", aur::AUR_BASE_URL))
-        .multipart(form)
-        .send()
-        .await?
-        .text()
-        .await?;
-
-    let document = Html::parse_document(&resp);
-    if let Some(li) = document.select(&aur::LOGIN_ERROR_SELECTOR).next() {
-        return Err(anyhow!(
-            "failed to login to AUR: {}",
-            li.text().collect::<String>()
-        ));
-    }
-
-    Ok(())
 }

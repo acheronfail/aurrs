@@ -4,6 +4,8 @@ use std::time::Duration;
 
 use anyhow::{anyhow, Result};
 
+const SUDO_REFRESH_INTERVAL: Duration = Duration::from_secs(290);
+
 pub fn use_sudo() -> Result<()> {
     // Run thread in background.
     spawn(|| loop_sudo());
@@ -26,6 +28,6 @@ fn loop_sudo() -> Result<()> {
             ));
         }
 
-        sleep(Duration::from_secs(290));
+        sleep(SUDO_REFRESH_INTERVAL);
     }
 }
