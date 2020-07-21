@@ -34,13 +34,13 @@ async fn main() -> Result<()> {
                 command::vote(&client, options).await?
             }
             // Commands are proxied directly to pacman.
-            SubCommand::PacmanD { .. }
-            | SubCommand::PacmanF { .. }
-            | SubCommand::PacmanQ { .. }
-            | SubCommand::PacmanR { .. }
-            | SubCommand::PacmanS { .. }
-            | SubCommand::PacmanT { .. }
-            | SubCommand::PacmanU { .. } => {
+            SubCommand::PacmanD(_)
+            | SubCommand::PacmanF(_)
+            | SubCommand::PacmanQ(_)
+            | SubCommand::PacmanR(_)
+            | SubCommand::PacmanS(_)
+            | SubCommand::PacmanT(_)
+            | SubCommand::PacmanU(_) => {
                 sudo::use_sudo()?;
                 command::pacman(args_os().into_iter().skip(1))?;
             }
