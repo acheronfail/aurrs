@@ -23,28 +23,34 @@ async fn main() -> Result<()> {
         }
     }
 
-    match args.command {
-        Some(subcommand) => match &subcommand {
-            // AUR voting.
-            SubCommand::Vote(options) => {
-                // TODO: load the cookie from disk, currently not possible with reqwest
-                // See: https://github.com/seanmonstar/reqwest/issues/14#issuecomment-481414056
-                let client = Client::builder().cookie_store(true).build()?;
-                aur::login_client_to_aur(&client).await?;
-                command::vote(&client, options).await?
-            }
-            // Commands are proxied directly to pacman.
-            SubCommand::PacmanD(_)
-            | SubCommand::PacmanF(_)
-            | SubCommand::PacmanQ(_)
-            | SubCommand::PacmanR(_)
-            | SubCommand::PacmanS(_)
-            | SubCommand::PacmanT(_)
-            | SubCommand::PacmanU(_) => {
+    match args.subcommand {
+        Some(subcommand) => {
+            if subcommand.needs_sudo() {
                 sudo::use_sudo()?;
-                command::pacman(args_os().into_iter().skip(1))?;
             }
-        },
+
+            let cli_arguments = args_os().into_iter().skip(1);
+
+            match &subcommand {
+                // AUR voting.
+                SubCommand::Vote(options) => {
+                    // TODO: load the cookie from disk, currently not possible with reqwest
+                    // See: https://github.com/seanmonstar/reqwest/issues/14#issuecomment-481414056
+                    let client = Client::builder().cookie_store(true).build()?;
+                    aur::login_client_to_aur(&client).await?;
+                    command::vote(&client, options).await?
+                }
+                // These commands are extended
+                SubCommand::PacmanS(_) => command::sync(cli_arguments)?,
+                SubCommand::PacmanR(_) => command::remove(cli_arguments)?,
+                // These commands are proxied directly to pacman
+                SubCommand::PacmanD(_)
+                | SubCommand::PacmanQ(_)
+                | SubCommand::PacmanF(_)
+                | SubCommand::PacmanT(_)
+                | SubCommand::PacmanU(_) => command::pacman(cli_arguments)?,
+            }
+        }
         // Default to `-Syu`
         None => {
             sudo::use_sudo()?;

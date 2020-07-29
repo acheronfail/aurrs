@@ -1,5 +1,5 @@
 mod pacman;
 mod vote;
 
-pub use pacman::pacman;
-pub use vote::vote;
+pub use pacman::*;
+pub use vote::*;

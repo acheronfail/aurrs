@@ -7,7 +7,7 @@ use clap::Clap;
 pub struct Args {
     /// The subcommand to run
     #[clap(subcommand)]
-    pub command: Option<SubCommand>,
+    pub subcommand: Option<SubCommand>,
 }
 
 /// A simple struct that swallows all arguments passed after it.
@@ -42,6 +42,21 @@ pub enum SubCommand {
     /// Vote for a package on the AUR
     #[clap(short_flag = 'A', long_flag = "vote", setting = ColoredHelp)]
     Vote(VoteCommandOptions),
+}
+
+impl SubCommand {
+    pub fn needs_sudo(&self) -> bool {
+        match self {
+            SubCommand::PacmanD(_)
+            | SubCommand::PacmanF(_)
+            | SubCommand::PacmanQ(_)
+            | SubCommand::PacmanR(_)
+            | SubCommand::PacmanS(_)
+            | SubCommand::PacmanT(_)
+            | SubCommand::PacmanU(_) => true,
+            SubCommand::Vote(_) => false,
+        }
+    }
 }
 
 #[derive(Debug, Clap)]
