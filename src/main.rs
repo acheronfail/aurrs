@@ -39,11 +39,10 @@ fn main() -> Result<()> {
                     aur::login_client_to_aur(&client)?;
                     command::vote(&client, options)?
                 }
-                // These commands are extended
-                SubCommand::PacmanS(_) => command::sync(cli_arguments)?,
-                SubCommand::PacmanR(_) => command::remove(cli_arguments)?,
                 // These commands are proxied directly to pacman
-                SubCommand::PacmanD(_)
+                SubCommand::PacmanS(_)
+                | SubCommand::PacmanR(_)
+                | SubCommand::PacmanD(_)
                 | SubCommand::PacmanQ(_)
                 | SubCommand::PacmanF(_)
                 | SubCommand::PacmanT(_)

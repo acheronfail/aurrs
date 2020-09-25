@@ -22,19 +22,3 @@ where
 
     Ok(())
 }
-
-pub fn sync<I, S>(args: I) -> Result<()>
-where
-    I: IntoIterator<Item = S>,
-    S: AsRef<OsStr>,
-{
-    todo!()
-}
-
-pub fn remove<I, S>(args: I) -> Result<()>
-where
-    I: IntoIterator<Item = S>,
-    S: AsRef<OsStr>,
-{
-    todo!()
-}
