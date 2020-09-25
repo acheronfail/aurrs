@@ -9,12 +9,11 @@ use std::env::args_os;
 
 use anyhow::Result;
 use clap::{crate_name, Clap};
-use reqwest::Client;
+use reqwest::blocking::Client;
 
 use cli::{Args, SubCommand};
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let args = Args::parse();
 
     unsafe {
@@ -37,8 +36,8 @@ async fn main() -> Result<()> {
                     // TODO: load the cookie from disk, currently not possible with reqwest
                     // See: https://github.com/seanmonstar/reqwest/issues/14#issuecomment-481414056
                     let client = Client::builder().cookie_store(true).build()?;
-                    aur::login_client_to_aur(&client).await?;
-                    command::vote(&client, options).await?
+                    aur::login_client_to_aur(&client)?;
+                    command::vote(&client, options)?
                 }
                 // These commands are extended
                 SubCommand::PacmanS(_) => command::sync(cli_arguments)?,

@@ -1,27 +1,23 @@
 use anyhow::{anyhow, Result};
 use clap::crate_name;
-use reqwest::multipart::Form;
-use reqwest::Client;
+use reqwest::blocking::multipart::Form;
+use reqwest::blocking::Client;
 use scraper::Html;
 
 use crate::aur::constants::{AUR_BASE_URL, AUR_TOKEN_SELECTOR, UNVOTE_SELECTOR, VOTE_SELECTOR};
-use crate::model::{AurRpcInfo, AurRpcInfoResult, PackageStatus};
+use crate::model::PackageStatus;
 
-pub async fn change_package_vote(
+pub fn change_package_vote(
     client: &Client,
-    pkg: &str,
+    pkg_name: &str,
     token: String,
     vote: bool,
 ) -> Result<()> {
-    let resp = client
-        .get(&format!("{}/rpc.php", AUR_BASE_URL))
-        .query(&[("type", "info"), ("arg", pkg)])
-        .send()
-        .await?
-        .json::<AurRpcInfo>()
-        .await?;
-
-    let AurRpcInfoResult { package_base, .. } = resp.results;
+    let pkgs = raur::info(&[pkg_name])?;
+    let pkg = match pkgs.first() {
+        Some(pkg) => pkg,
+        None => return Err(anyhow!("Failed to find package with name: {}", pkg_name)),
+    };
 
     let (action, url_path) = if vote {
         ("do_Vote", "vote")
@@ -34,17 +30,16 @@ pub async fn change_package_vote(
         .post(&format!(
             "{}/pkgbase/{}/{}/",
             AUR_BASE_URL,
-            urlencoding::encode(&package_base),
+            urlencoding::encode(&pkg.package_base),
             urlencoding::encode(url_path)
         ))
         .multipart(form)
-        .send()
-        .await?;
+        .send()?;
 
     Ok(())
 }
 
-pub async fn get_package_status(client: &Client, pkg: &str) -> Result<PackageStatus> {
+pub fn get_package_status(client: &Client, pkg: &str) -> Result<PackageStatus> {
     let resp = client
         .get(&format!(
             "{}/packages/{}/",
@@ -52,10 +47,8 @@ pub async fn get_package_status(client: &Client, pkg: &str) -> Result<PackageSta
             urlencoding::encode(pkg)
         ))
         .query(&[("setlang", "en")])
-        .send()
-        .await?
-        .text()
-        .await?;
+        .send()?
+        .text()?;
 
     let document = Html::parse_document(&resp);
     let token = document
