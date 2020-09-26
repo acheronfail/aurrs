@@ -31,13 +31,30 @@ fn main() -> Result<()> {
             let cli_arguments = args_os().into_iter().skip(1);
 
             match &subcommand {
-                // AUR voting.
-                SubCommand::Vote(options) => {
-                    // TODO: load the cookie from disk, currently not possible with reqwest
-                    // See: https://github.com/seanmonstar/reqwest/issues/14#issuecomment-481414056
-                    let client = Client::builder().cookie_store(true).build()?;
-                    aur::login_client_to_aur(&client)?;
-                    command::vote(&client, options)?
+                // AUR.
+                SubCommand::Aur(options) => {
+                    let should_install = options.package || (!options.vote && !options.info);
+                    if should_install {
+                        command::install(options)?;
+                    } else {
+                        // TODO: load the cookie from disk, currently not possible with reqwest
+                        // See: https://github.com/seanmonstar/reqwest/issues/14#issuecomment-481414056
+                        let client = Client::builder().cookie_store(true).build()?;
+                        aur::login_client_to_aur(&client)?;
+
+                        if options.vote {
+                            command::vote(&client, options)?
+                        } else if options.info {
+                            let info_string =
+                                command::get_vote_packages_statuses(&client, options)?
+                                    .iter()
+                                    .map(|p| format!("{}", p))
+                                    .collect::<Vec<_>>()
+                                    .join("\n---\n");
+
+                            println!("{}", info_string);
+                        }
+                    }
                 }
                 // These commands are proxied directly to pacman
                 SubCommand::PacmanS(_)

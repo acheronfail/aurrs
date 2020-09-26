@@ -5,7 +5,7 @@ use reqwest::blocking::Client;
 use scraper::Html;
 
 use crate::aur::constants::{AUR_BASE_URL, AUR_TOKEN_SELECTOR, UNVOTE_SELECTOR, VOTE_SELECTOR};
-use crate::model::PackageStatus;
+use crate::model::AurPackage;
 
 pub fn change_package_vote(
     client: &Client,
@@ -39,7 +39,7 @@ pub fn change_package_vote(
     Ok(())
 }
 
-pub fn get_package_status(client: &Client, pkg: &str) -> Result<PackageStatus> {
+pub fn get_vote_package_status(client: &Client, pkg: &str, fetch_meta: bool) -> Result<AurPackage> {
     let resp = client
         .get(&format!(
             "{}/packages/{}/",
@@ -57,17 +57,9 @@ pub fn get_package_status(client: &Client, pkg: &str) -> Result<PackageStatus> {
         .and_then(|input| input.value().attr("value").map(|s| s.to_string()));
 
     if document.select(&UNVOTE_SELECTOR).next().is_some() {
-        Ok(PackageStatus {
-            name: pkg.to_string(),
-            voted: true,
-            token,
-        })
+        AurPackage::new(pkg, token, true, fetch_meta)
     } else if document.select(&VOTE_SELECTOR).next().is_some() {
-        Ok(PackageStatus {
-            name: pkg.to_string(),
-            voted: false,
-            token,
-        })
+        AurPackage::new(pkg, token, false, fetch_meta)
     } else {
         Err(anyhow!(
             "[{}] failed to load package page, does it exist?",

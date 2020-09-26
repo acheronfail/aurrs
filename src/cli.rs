@@ -39,9 +39,9 @@ pub enum SubCommand {
     #[clap(name = "upgrade", short_flag = 'U', long_flag = "upgrade")]
     PacmanU(ClapArgsSink),
 
-    /// Vote for a package on the AUR
-    #[clap(short_flag = 'A', long_flag = "vote", setting = ColoredHelp)]
-    Vote(VoteCommandOptions),
+    /// AUR commands
+    #[clap(short_flag = 'A', long_flag = "aur", setting = ColoredHelp)]
+    Aur(AurCommandOptions),
 }
 
 impl SubCommand {
@@ -54,27 +54,41 @@ impl SubCommand {
             | SubCommand::PacmanS(_)
             | SubCommand::PacmanT(_)
             | SubCommand::PacmanU(_) => true,
-            SubCommand::Vote(_) => false,
+            SubCommand::Aur(_) => false,
         }
     }
 }
 
 #[derive(Debug, Clap)]
-pub struct VoteCommandOptions {
+pub struct AurCommandOptions {
+    // REQUIRED
+    // --------
     /// The list of packages
     #[clap(required = true)]
     pub packages: Vec<String>,
 
-    /// View vote status
-    #[clap(short = 'i', long = "info", conflicts_with = "unvote")]
+    // OPERATIONS
+    // --------
+    /// View package information, including voted status
+    #[clap(short = 'i', long = "info", conflicts_with_all = &["package", "vote", "remove"])]
     pub info: bool,
 
-    /// Remove your vote
+    /// Install/remove a package
+    #[clap(short = 'p', long = "package")]
+    pub package: bool,
+
+    /// Add/remove a vote
+    #[clap(short = 'v', long = "vote")]
+    pub vote: bool,
+
+    // BEHAVIOUR OPTIONS
+    // --------
+    /// Remove for the current operation (add is the default)
     #[clap(short = 'r', long = "remove")]
-    pub unvote: bool,
+    pub remove: bool,
 }
 
-impl VoteCommandOptions {
+impl AurCommandOptions {
     pub fn longest_package_len(&self) -> usize {
         self.packages
             .iter()

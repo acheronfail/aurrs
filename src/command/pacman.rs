@@ -8,8 +8,11 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
 {
-    let mut child = Command::new("sudo").arg("pacman").args(args).spawn()?;
-    let status = child.wait()?;
+    let status = Command::new("sudo")
+        .arg("pacman")
+        .args(args)
+        .spawn()?
+        .wait()?;
     if !status.success() {
         if let Some(code) = status.code() {
             eprintln!("pacman exited with code: {}", code);
