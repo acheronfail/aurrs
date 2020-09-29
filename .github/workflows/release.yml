@@ -4,8 +4,8 @@ name: release
 on:
   push:
     # Enable when testing release infrastructure on a branch.
-    # branches:
-    # - release/xyz
+    branches:
+    - wip/actions
     tags:
     - 'v[0-9]+.[0-9]+.[0-9]+'
 jobs:
@@ -72,7 +72,7 @@ jobs:
       RUST_BACKTRACE: 1
     strategy:
       matrix:
-        build: [linux-gnu, linux-musl, linux-arm-gnueabihf, macos, win-msvc, win-gnu, win32-msvc]
+        build: [linux-gnu, linux-musl, linux-arm-gnueabihf]
         include:
         - build: linux-gnu
           os: ubuntu-18.04
@@ -86,22 +86,6 @@ jobs:
           os: ubuntu-18.04
           rust: nightly
           target: arm-unknown-linux-gnueabihf
-        - build: macos
-          os: macos-latest
-          rust: nightly
-          target: x86_64-apple-darwin
-        - build: win-msvc
-          os: windows-2019
-          rust: nightly
-          target: x86_64-pc-windows-msvc
-        - build: win-gnu
-          os: windows-2019
-          rust: nightly-x86_64-gnu
-          target: x86_64-pc-windows-gnu
-        - build: win32-msvc
-          os: windows-2019
-          rust: nightly
-          target: i686-pc-windows-msvc
 
     steps:
     - name: Checkout repository
@@ -115,11 +99,6 @@ jobs:
       run: |
         ci/install-packages-ubuntu.sh
 
-    - name: Install packages (macOS)
-      if: matrix.os == 'macos-latest'
-      run: |
-        ci/install-packages-macos.sh
-
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
@@ -127,21 +106,6 @@ jobs:
         profile: minimal
         override: true
         target: ${{ matrix.target }}
-
-    - name: Use Cross
-      run: |
-        # FIXME: to work around bugs in latest cross release, install master.
-        # See: https://github.com/rust-embedded/cross/issues/357
-        cargo install --git https://github.com/rust-embedded/cross
-        echo "::set-env name=CARGO::cross"
-        echo "::set-env name=TARGET_FLAGS::--target ${{ matrix.target }}"
-        echo "::set-env name=TARGET_DIR::./target/${{ matrix.target }}"
-
-    - name: Show command used for Cargo
-      run: |
-        echo "cargo command is: ${{ env.CARGO }}"
-        echo "target flag is: ${{ env.TARGET_FLAGS }}"
-        echo "target dir is: ${{ env.TARGET_DIR }}"
 
     - name: Get release download URL
       uses: actions/download-artifact@v1
@@ -160,10 +124,10 @@ jobs:
         echo "release version: $RELEASE_VERSION"
 
     - name: Build release binary
-      run: ${{ env.CARGO }} build --verbose --release ${{ env.TARGET_FLAGS }}
+      run: cargo build --verbose --release
 
-    - name: Strip release binary (linux and macos)
-      if: matrix.build == 'linux' || matrix.build == 'macos'
+    - name: Strip release binary (linux)
+      if: matrix.build == 'linux'
       run: strip "target/${{ matrix.target }}/release/${{ env.BIN_NAME }}"
 
     - name: Strip release binary (arm)
@@ -180,26 +144,18 @@ jobs:
     - name: Build archive
       shell: bash
       run: |
-        outdir="$(ci/cargo-out-dir.sh "${{ env.TARGET_DIR }}")"
-        if [ "${{ matrix.os }}" != "windows-2019" ]; then
-          asciidoctor --doctype manpage --backend manpage --destination-dir "$outdir" doc/${{ env.BIN_NAME }}.1.template
-        fi
+        outdir="$(ci/cargo-out-dir.sh "./target")"
+        asciidoctor --doctype manpage --backend manpage --destination-dir "$outdir" doc/${{ env.BIN_NAME }}.1.template
         staging="repgrep-${{ env.RELEASE_VERSION }}-${{ matrix.target }}"
         mkdir -p "$staging"/{complete,doc}
 
         cp {LICENSE-*,CHANGELOG.md,README.md} "$staging/doc/"
         cp "$outdir"/{_${{ env.BIN_NAME }},${{ env.BIN_NAME }}.bash,${{ env.BIN_NAME }}.fish,_${{ env.BIN_NAME }}.ps1} "$staging/complete/"
 
-        if [ "${{ matrix.os }}" = "windows-2019" ]; then
-          cp "target/${{ matrix.target }}/release/${{ env.BIN_NAME }}.exe" "$staging/"
-          7z a "$staging.zip" "$staging"
-          echo "::set-env name=ASSET::$staging.zip"
-        else
-          cp "$outdir"/${{ env.BIN_NAME }}.1 "$staging/doc/"
-          cp "target/${{ matrix.target }}/release/${{ env.BIN_NAME }}" "$staging/"
-          tar czf "$staging.tar.gz" "$staging"
-          echo "::set-env name=ASSET::$staging.tar.gz"
-        fi
+        cp "$outdir"/${{ env.BIN_NAME }}.1 "$staging/doc/"
+        cp "target/${{ matrix.target }}/release/${{ env.BIN_NAME }}" "$staging/"
+        tar czf "$staging.tar.gz" "$staging"
+        echo "::set-env name=ASSET::$staging.tar.gz"
 
     - name: Upload release archive
       uses: actions/upload-release-asset@v1.0.1
