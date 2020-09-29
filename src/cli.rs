@@ -39,7 +39,7 @@ pub enum SubCommand {
     #[clap(name = "upgrade", short_flag = 'U', long_flag = "upgrade")]
     PacmanU(ClapArgsSink),
 
-    /// AUR commands
+    /// AUR commands (install AUR packages, vote for packages, etc)
     #[clap(short_flag = 'A', long_flag = "aur", setting = ColoredHelp)]
     Aur(AurCommandOptions),
 }

@@ -4,7 +4,8 @@ AUR + RS
 
 An experimental wrapper for `pacman` which adds the following features:
 
-* Voting on the AUR repository
+* Install AUR packages
+* Voting on AUR packages
 * ... more to come!
 
 ## Usage
@@ -20,7 +21,7 @@ FLAGS:
     -V, --version    Prints version information
 
 SUBCOMMANDS:
-    -A, --vote, vote            Vote for a package on the AUR
+    -A, --aur, aur              AUR commands (install AUR packages, vote for packages, etc)
     -D, --database, database    Alias for calling `pacman -D <args>...`
     -F, --files, files          Alias for calling `pacman -F <args>...`
     -Q, --query, query          Alias for calling `pacman -Q <args>...`
