@@ -17,9 +17,9 @@ jobs:
   create-release:
     name: create-release
     runs-on: ubuntu-latest
-    # env:
-    #   # Set to force version number, e.g., when no tag exists.
-    #   CRATE_VERSION: TEST-0.0.0
+    env:
+      # Set to force version number, e.g., when no tag exists.
+      CRATE_VERSION: TEST-0.0.1
     steps:
       - name: Create artifacts directory
         run: mkdir artifacts
@@ -124,7 +124,7 @@ jobs:
         echo "release version: $RELEASE_VERSION"
 
     - name: Build release binary
-      run: cargo build --verbose --release
+      run: cargo build --verbose --release --target ${{ matrix.target }}
 
     - name: Strip release binary (linux)
       if: matrix.build == 'linux'
